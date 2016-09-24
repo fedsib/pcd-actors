@@ -21,34 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  * <p/>
- * Please, insert description here.
  *
- * @author Riccardo Cardin
- * @version 1.0
- * @since 1.0
- */
-
-/**
- * Please, insert description here.
+ * Defines common properties of all actors.
  *
  * @author Riccardo Cardin
  * @version 1.0
  * @since 1.0
  */
 package it.unipd.math.pcd.actors;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.NoSuchElementException;
 
-/**
- * Defines common properties of all actors.
- *
- * @author Riccardo Cardin
- * @version 1.5
- * @since 1.0
- * @author Federico Silvio Busetto
- * @since 1.5
- */
+import it.unipd.math.pcd.actors.exceptions.NoSuchActorException;
+
 public abstract class AbsActor<T extends Message> implements Actor<T> {
+
+    /**
+     * Mailbox of the Actor
+     */
+
+    protected final Mailbox<T> mb;
+
+    /**
+     * True if the actor is stopped, otherwise false
+     */
+    private volatile boolean stopped;
 
     /**
      * Self-reference of the actor
@@ -60,71 +55,117 @@ public abstract class AbsActor<T extends Message> implements Actor<T> {
      */
     protected ActorRef<T> sender;
 
-    /**
-     * Define Actor's Mailbox as an inner class
-     */
 
-    private final class MailboxImpl<T extends Message> implements Mailbox<T> {
-
-        private final ConcurrentLinkedQueue<MailBoxElement<T>> q;
-
-        MailboxImpl(){
-            q = new ConcurrentLinkedQueue<>();
-        }
-
-        /**
-         * Inserts the specified message at the tail of an actor's mailbox.
-         * As the mailbox is unbounded, this method will never throw
-         * IllegalStateException or return false.
-         * @param msg The message to add in the actor's mailbox
-         * @return true if the message was added in the actor's mailbox
-         */
-        @Override
-        public boolean add(MailBoxElement<T> msg){
-            try {
-               return q.add(msg);
-            } catch (NullPointerException |IllegalStateException e) {
-                e.printStackTrace();
-            }
-            return false;
-        }
-
-        /**
-         * Returns true if the mailbox of the actor contains no elements.
-         * @return true if the mailbox of the actor is empty.
-         */
-        @Override
-        public boolean isEmpty(){
-            return q.isEmpty();
-        }
-
-        /**
-         *Returns the number of elements in the actor's mailbox.
-         * @return the number of elements in the actor's mailbox
-         */
-        @Override
-        public int size() {
-            return q.size();
-        }
-
-        @Override
-        public MailBoxElement<T> getElement(){
-            try{
-                return q.remove();
-            }
-            catch (NoSuchElementException e){
-                e.printStackTrace();
-            }
-            return null;
-        }
-
+    public AbsActor(){
+        mb = new MailBoxImpl<>();
+        stopped = false;
+        startRManager();
     }
 
     /**
-     * Mailbox of the Actor
+     * Manages all the messages in the mailbox
+     * */
+    public synchronized void clearMailbox(){
+     while(!mb.isEmpty()){
+         synchronized (AbsActor.this) {
+         MailBoxElement<T> msg = mb.extract();
+         sender = msg.getSender();
+         receive(msg.getMessage());
+         }
+     }
+ }
+
+ /**
+  * Get the mailbox of an actor
+  * */
+
+ public Mailbox<T> getMb(){
+     return  mb;
+ }
+
+ /**
+  * Manager for the incoming Messages
+  *
+  * */
+    private void startRManager() {
+        Thread rM = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    while (!isStopped()) {
+                            while (mb.isEmpty()) {
+                                synchronized (mb){
+                                    mb.wait();
+                            }
+                        }
+                        if (!mb.isEmpty()){
+                            synchronized (mb){
+                                MailBoxElement<T> MBhead = mb.extract();
+                                sender = MBhead.getSender();
+                                receive(MBhead.getMessage());
+                            }
+                        }
+                    }
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                    //setStopped();
+                }
+                finally {
+                    clearMailbox();
+                    while (!mb.isEmpty() ) {
+                        synchronized (AbsActor.this) {
+                            try {
+                                AbsActor.this.setStopped();
+                                AbsActor.this.notifyAll();
+                            } catch (NoSuchActorException nsae) {
+                                nsae.printStackTrace();
+                            }
+
+                        }
+                    }
+                }
+            }
+        });
+        rM.start();
+    }
+
+    /**
+     * Gets the stopped value.
      */
 
-    private final Mailbox mb = new MailboxImpl<>();
+    public boolean isStopped(){
+        return stopped;
+    }
+
+   /**
+   * Sets the stopped value for an actor.
+   */
+
+   public synchronized void setStopped() throws NoSuchActorException{
+       if(!stopped){
+           stopped = true;
+           synchronized (mb) {
+               mb.notifyAll();
+           }
+       }
+
+       else throw new NoSuchActorException("Actor already stopped!");
+   }
+
+   /**
+   * Add a Message to the Mailbox
+   *
+   */
+
+    public void addMessage(final T msg, final ActorRef<T> snd) {
+        synchronized (mb){
+		if(!stopped) {
+                mb.add(msg,snd);
+                mb.notifyAll();
+            }
+        }
+    }
 
     /**
      * Sets the self-referece.
@@ -136,4 +177,5 @@ public abstract class AbsActor<T extends Message> implements Actor<T> {
         this.self = self;
         return this;
     }
+
 }

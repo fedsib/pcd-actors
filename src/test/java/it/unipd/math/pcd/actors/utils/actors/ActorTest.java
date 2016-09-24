@@ -21,25 +21,48 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  * <p/>
+ /**
+ * A concrete Actor used only for test purposes.
  *
- * A reference of an actor that allow to locate it in the actor system.
- * Using this reference it is possible to send a message among actors.
- *
- * @author Riccardo Cardin
+ * @author Federico Silvio Busetto
  * @version 1.0
  * @since 1.0
  */
 
-package it.unipd.math.pcd.actors;
+package it.unipd.math.pcd.actors.utils.actors;
+
+import it.unipd.math.pcd.actors.*;
+import it.unipd.math.pcd.actors.utils.ActorSystemTest;
+import it.unipd.math.pcd.actors.utils.messages.TrivialMessage;
 
 
-public interface ActorRef<T extends Message> extends Comparable<ActorRef> {
+public class ActorTest extends TrivialActor {
 
-    /**
-     * Sends a {@code message} to another actor
-     *
-     * @param message The message to send
-     * @param to The actor to which sending the message
-     */
-    void send(T message, ActorRef to);
+    private AbsActorSystem refer;
+
+    public void setRefer(AbsActorSystem absAS) {
+        refer = absAS;
+    }
+
+    @Override
+    public void addMessage(final TrivialMessage message, final ActorRef<TrivialMessage> send) {
+		
+        synchronized (mb){
+            if(!isStopped()) {
+                mb.add(message,send);
+                mb.notifyAll();
+            }
+        }
+
+         synchronized (this){ sendmex++;}
+    }
+
+
+    private volatile int sendmex;
+    public synchronized int getSendMex() { return sendmex; }
+
+    @Override
+    public void receive(TrivialMessage message) {
+        ((ActorSystemTest)refer).incrementProcessed();
+    }
 }

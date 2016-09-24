@@ -21,23 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  * <p/>
- * Please, insert description here.
  *
- * @author Riccardo Cardin
- * @version 1.0
- * @since 1.0
- */
-
-/**
- * Please, insert description here.
- *
- * @author Riccardo Cardin
- * @version 1.0
- * @since 1.0
- */
-package it.unipd.math.pcd.actors;
-
-/**
  * An actor in the <code>pcd-actor</code> system that receives
  * messages of a defined type.
  *
@@ -45,6 +29,9 @@ package it.unipd.math.pcd.actors;
  * @version 1.0
  * @since 1.0
  */
+
+package it.unipd.math.pcd.actors;
+
 public interface Actor<T extends Message> {
 
     /**

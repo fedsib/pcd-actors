@@ -22,24 +22,43 @@
  * SOFTWARE.
  * <p/>
  *
- * A reference of an actor that allow to locate it in the actor system.
- * Using this reference it is possible to send a message among actors.
+ * A concrete implementation of an actor Mailbox
  *
- * @author Riccardo Cardin
+ * @author Federico Silvio Busetto
  * @version 1.0
  * @since 1.0
  */
-
+ 
 package it.unipd.math.pcd.actors;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-public interface ActorRef<T extends Message> extends Comparable<ActorRef> {
+public class MailBoxImpl<T extends Message> implements Mailbox<T> {
 
-    /**
-     * Sends a {@code message} to another actor
-     *
-     * @param message The message to send
-     * @param to The actor to which sending the message
-     */
-    void send(T message, ActorRef to);
+    protected final ConcurrentLinkedQueue<MailBoxElement<T>> q;
+
+    public MailBoxImpl() {
+        q = new ConcurrentLinkedQueue<>();
+    }
+
+    public void add(T msg, ActorRef<? extends Message> snd) {
+        synchronized(q){
+			q.add(new MailBoxElement<>(msg,snd));
+		}
+    }
+
+    public MailBoxElement<T> extract() {
+        synchronized(q){
+			return q.poll();
+		}
+    }
+
+    public boolean isEmpty() {
+        return q.isEmpty();
+    }
+
+
+    public int size() {
+		return q.size();
+    }
 }

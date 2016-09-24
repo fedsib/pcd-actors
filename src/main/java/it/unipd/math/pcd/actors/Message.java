@@ -22,27 +22,14 @@
  * SOFTWARE.
  * <p/>
  * Please, insert description here.
- *
- * @author Riccardo Cardin
- * @version 1.0
- * @since 1.0
- */
-
-/**
- * Please, insert description here.
- *
- * @author Riccardo Cardin
- * @version 1.0
- * @since 1.0
- */
-package it.unipd.math.pcd.actors;
-
-/**
  * A message that can be sent among actors
  *
  * @author Riccardo Cardin
  * @version 1.0
  * @since 1.0
  */
+
+package it.unipd.math.pcd.actors;
+
 public interface Message {
 }

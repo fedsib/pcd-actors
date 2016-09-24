@@ -21,23 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  * <p/>
- * Please, insert description here.
  *
- * @author Riccardo Cardin
- * @version 1.0
- * @since 1.0
- */
-
-/**
- * Please, insert description here.
- *
- * @author Riccardo Cardin
- * @version 1.0
- * @since 1.0
- */
-package it.unipd.math.pcd.actors;
-
-/**
  * The system of actors. Using the system it is possible to:
  * <ul>
  *     <li>Create a new instance of an actor</li>
@@ -48,6 +32,9 @@ package it.unipd.math.pcd.actors;
  * @version 1.0
  * @since 1.0
  */
+
+package it.unipd.math.pcd.actors;
+
 public interface ActorSystem {
 
     /**

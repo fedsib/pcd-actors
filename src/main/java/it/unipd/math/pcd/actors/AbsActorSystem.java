@@ -21,39 +21,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  * <p/>
- * Please, insert description here.
  *
- * @author Riccardo Cardin
- * @version 1.0
- * @since 1.0
- */
-
-/**
- * Please, insert description here.
- *
- * @author Riccardo Cardin
- * @version 1.0
- * @since 1.0
- */
-package it.unipd.math.pcd.actors;
-
-import it.unipd.math.pcd.actors.exceptions.NoSuchActorException;
-
-import java.util.Map;
-
-/**
  * A map-based implementation of the actor system.
  *
  * @author Riccardo Cardin
  * @version 1.0
  * @since 1.0
  */
+
+package it.unipd.math.pcd.actors;
+
+import it.unipd.math.pcd.actors.exceptions.NoSuchActorException;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 public abstract class AbsActorSystem implements ActorSystem {
 
     /**
      * Associates every Actor created with an identifier.
      */
-    private Map<ActorRef<?>, Actor<?>> actors;
+    protected final Map<ActorRef<?>, Actor<?>> actors;
+	
+	public AbsActorSystem(){
+		actors = new ConcurrentHashMap<>();
+    }
 
     @Override
     public ActorRef<? extends Message> actorOf(Class<? extends Actor> actor, ActorMode mode) {
@@ -77,6 +69,17 @@ public abstract class AbsActorSystem implements ActorSystem {
     @Override
     public ActorRef<? extends Message> actorOf(Class<? extends Actor> actor) {
         return this.actorOf(actor, ActorMode.LOCAL);
+    }
+
+
+    /**
+     * Retrieves the actor, if present
+     */
+    public Actor getUnderlyingActor(ActorRef<?> aR) throws NoSuchActorException {
+        if(!actors.containsKey(aR) )
+            throw new NoSuchActorException();
+        else
+            return actors.get(aR);
     }
 
     protected abstract ActorRef createActorReference(ActorMode mode);
